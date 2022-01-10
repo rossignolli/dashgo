@@ -14,8 +14,10 @@ import {
   Td,
   useBreakpointValue,
   Link,
+  Spinner,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { useEffect } from "react";
+import { QueryClient, QueryClientProvider, useQuery } from "react-query";
 
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
@@ -23,10 +25,18 @@ import { RiAddLine, RiPencilLine } from "react-icons/ri";
 import { Pagination } from "../components/Pagination/Pagination";
 
 export default function Users() {
+  const { data, isLoading, error } = useQuery("user", async () => {
+    const response = await fetch("http://localhost:3000/api/users");
+    const data = await response.json();
+    return data;
+  });
+
   const isWideVersion = useBreakpointValue({
     base: true,
     lg: false,
   });
+
+  useEffect(() => {}, []);
 
   return (
     <Box>
@@ -41,9 +51,8 @@ export default function Users() {
               Usuários
             </Heading>
 
-            <Link href="/users/create" passHref>
+            <Link href="/users/create">
               <Button
-                as="a"
                 size="sm"
                 fontSize="sm"
                 colorScheme="pink"
@@ -54,51 +63,61 @@ export default function Users() {
             </Link>
           </Flex>
 
-          <Table colorScheme="whiteAlpha">
-            <Thead>
-              <Tr>
-                <Th px={["4", "4", "6"]} color="gray.300" width="8">
-                  <Checkbox colorScheme="pink" />
-                </Th>
-                <Th>Usuários</Th>
-                {!isWideVersion && <Th>Data de cadastro</Th>}
-                <Th width="8"></Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {Array.from(Array(5).keys()).map((key) => (
-                <Tr key={key}>
-                  <Td px={["4", "4", "6"]}>
-                    <Checkbox colorScheme="pink" />
-                  </Td>
-                  <Td>
-                    <Box>
-                      <Text fontWeight="bold">Carlos Rossignolli</Text>
-                      <Text fontWeight="sm" color="gray.300">
-                        carlosvitorvigarani@hotmail.com
-                      </Text>
-                    </Box>
-                  </Td>
-                  {!isWideVersion && <Td>04 de Abril, 2021</Td>}
-                  <Td>
-                    {!isWideVersion && (
-                      <Button
-                        as="a"
-                        size="sm"
-                        fontSize="sm"
-                        colorScheme="purple"
-                        leftIcon={<Icon as={RiPencilLine} fontSize="16" />}
-                      >
-                        {isWideVersion}
-                      </Button>
-                    )}
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
-
-          <Pagination />
+          {isLoading ? (
+            <Flex justify="center">
+              <Spinner />
+            </Flex>
+          ) : error ? (
+            <Flex justify="center">
+              <Text>Falha ao obter dados</Text>
+            </Flex>
+          ) : (
+            <>
+              <Table colorScheme="whiteAlpha">
+                <Thead>
+                  <Tr>
+                    <Th px={["4", "4", "6"]} color="gray.300" width="8">
+                      <Checkbox colorScheme="pink" />
+                    </Th>
+                    <Th>Usuários</Th>
+                    {!isWideVersion && <Th>Data de cadastro</Th>}
+                    <Th width="8"></Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {Array.from(Array(5).keys()).map((key) => (
+                    <Tr key={key}>
+                      <Td px={["4", "4", "6"]}>
+                        <Checkbox colorScheme="pink" />
+                      </Td>
+                      <Td>
+                        <Box>
+                          <Text fontWeight="bold">Carlos Rossignolli</Text>
+                          <Text fontWeight="sm" color="gray.300">
+                            carlosvitorvigarani@hotmail.com
+                          </Text>
+                        </Box>
+                      </Td>
+                      {!isWideVersion && <Td>04 de Abril, 2021</Td>}
+                      <Td>
+                        {!isWideVersion && (
+                          <Button
+                            size="sm"
+                            fontSize="sm"
+                            colorScheme="purple"
+                            leftIcon={<Icon as={RiPencilLine} fontSize="16" />}
+                          >
+                            {isWideVersion}
+                          </Button>
+                        )}
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+              <Pagination />
+            </>
+          )}
         </Box>
       </Flex>
     </Box>

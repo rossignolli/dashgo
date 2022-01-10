@@ -17,7 +17,7 @@ export function Profile({ showProfileData }: IProfileProps) {
         </Box>
       )}
 
-      <Avatar size="md" src="https://github.com/rossignolli.png" />
+      <Avatar size="lg" name="Carlos Vitor" />
     </Flex>
   );
 }
