@@ -17,26 +17,39 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import React, { useEffect } from "react";
-import { QueryClient, QueryClientProvider, useQuery } from "react-query";
+import { useQuery } from "react-query";
 
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import { RiAddLine, RiPencilLine } from "react-icons/ri";
-import { Pagination } from "../components/Pagination/Pagination";
+import Pagination from "../components/Pagination";
+import { api } from "../../services/api";
+import { useUsers } from "../../services/hooks/useUsers";
+import { queryClient } from "../../services/queryClient";
 
 export default function Users() {
-  const { data, isLoading, error } = useQuery("user", async () => {
-    const response = await fetch("http://localhost:3000/api/users");
-    const data = await response.json();
-    return data;
-  });
-
   const isWideVersion = useBreakpointValue({
     base: true,
     lg: false,
   });
 
-  useEffect(() => {}, []);
+  const [page, setPage] = React.useState(1);
+
+  const { data, isLoading, isFetching, error } = useUsers(page);
+
+  async function handlePrefetchUser(userId: string) {
+    await queryClient.prefetchQuery(
+      ["user", userId],
+      async () => {
+        const response = await api.get(`/users/${userId}`);
+
+        return response.data;
+      },
+      {
+        staleTime: 1000 * 60 * 10,
+      }
+    );
+  }
 
   return (
     <Box>
@@ -49,6 +62,9 @@ export default function Users() {
           <Flex mb="8" justify="space-between" align="center">
             <Heading size="lg" fontWeight="normal">
               Usuários
+              {!isLoading && isFetching && (
+                <Spinner size="sm" color="gray.500" ml="4" />
+              )}
             </Heading>
 
             <Link href="/users/create">
@@ -85,20 +101,25 @@ export default function Users() {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {Array.from(Array(5).keys()).map((key) => (
-                    <Tr key={key}>
+                  {data.users.map((user) => (
+                    <Tr key={user.id}>
                       <Td px={["4", "4", "6"]}>
                         <Checkbox colorScheme="pink" />
                       </Td>
                       <Td>
                         <Box>
-                          <Text fontWeight="bold">Carlos Rossignolli</Text>
+                          <Link
+                            color="purple.400"
+                            onMouseEnter={() => handlePrefetchUser(user.id)}
+                          >
+                            <Text fontWeight="bold">{user.name}</Text>
+                          </Link>
                           <Text fontWeight="sm" color="gray.300">
-                            carlosvitorvigarani@hotmail.com
+                            {user.email}
                           </Text>
                         </Box>
                       </Td>
-                      {!isWideVersion && <Td>04 de Abril, 2021</Td>}
+                      {!isWideVersion && <Td>{user.createdAt}</Td>}
                       <Td>
                         {!isWideVersion && (
                           <Button
@@ -115,7 +136,11 @@ export default function Users() {
                   ))}
                 </Tbody>
               </Table>
-              <Pagination />
+              <Pagination
+                totalCountOfRegisters={data.totalCount}
+                currentPage={page}
+                onPageChange={setPage}
+              />
             </>
           )}
         </Box>

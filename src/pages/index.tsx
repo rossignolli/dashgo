@@ -4,6 +4,9 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
+import { api } from "../services/api";
+import { queryClient } from "../services/queryClient";
+
 type SignData = {
   email: string;
   password: string;
@@ -13,6 +16,13 @@ const signInFormSchema = yup.object().shape({
   email: yup.string().required("E-mail obrigatório").email("E-mail inválido"),
   password: yup.string().required("Senha obrigatória"),
 });
+
+type CreateUserFormData = {
+  name: string;
+  email: string;
+  password: string;
+  pasw_confirmation: string;
+};
 
 export default function Signin() {
   const { register, handleSubmit, formState } = useForm({
